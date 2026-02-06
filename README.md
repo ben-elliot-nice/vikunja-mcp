@@ -103,20 +103,62 @@ Then configure your MCP client:
 
 For containerized deployments with HTTP access via mcp-proxy:
 
+#### Direct Docker Run (Recommended for Production)
+
+**With API Key Authentication:**
 ```bash
 # Build the Docker image
 docker build -t vikunja-mcp .
 
-# Run with environment variables
+# Run with API key authentication (recommended for production)
 docker run -d \
+  --name vikunja-mcp \
+  --network host \
+  -e VIKUNJA_URL=https://your-vikunja-instance.com/api/v1 \
+  -e VIKUNJA_API_TOKEN=your-api-token \
+  -e MCP_PROXY_API_KEY=your-secure-api-key-here \
+  vikunja-mcp \
+  bash -c 'args="mcp-proxy --pass-environment --port 8080 --host 0.0.0.0 --stateless"; [ -n "$MCP_PROXY_API_KEY" ] && args="$args --apiKey $MCP_PROXY_API_KEY"; exec $args -- node dist/index.js'
+
+# Test with API key
+curl -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "X-API-Key: your-secure-api-key-here" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
+```
+
+**Without Authentication (Development):**
+```bash
+# Run without API key (open access, not recommended for production)
+docker run -d \
+  --name vikunja-mcp \
+  --network host \
+  -e VIKUNJA_URL=https://your-vikunja-instance.com/api/v1 \
+  -e VIKUNJA_API_TOKEN=your-api-token \
+  vikunja-mcp \
+  mcp-proxy --pass-environment --port 8080 --host 0.0.0.0 --stateless -- node dist/index.js
+
+# Test without API key
+curl -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+```
+
+**Port Mapping Alternative (instead of --network host):**
+```bash
+docker run -d \
+  --name vikunja-mcp \
   -p 8080:8080 \
   -e VIKUNJA_URL=https://your-vikunja-instance.com/api/v1 \
   -e VIKUNJA_API_TOKEN=your-api-token \
-  --name vikunja-mcp \
-  vikunja-mcp
+  -e MCP_PROXY_API_KEY=your-secure-api-key-here \
+  vikunja-mcp \
+  bash -c 'args="mcp-proxy --pass-environment --port 8080 --host 0.0.0.0 --stateless"; [ -n "$MCP_PROXY_API_KEY" ] && args="$args --apiKey $MCP_PROXY_API_KEY"; exec $args -- node dist/index.js'
 ```
 
-Or use Docker Compose for easier configuration:
+#### Docker Compose (Simpler Configuration)
 
 ```bash
 # Create a .env file
