@@ -15,25 +15,24 @@ COPY . .
 RUN npx tsc
 
 # Add debug script for testing connectivity
-RUN echo '#!/bin/sh
-echo "=== Railway Network Debug ==="
-echo "Testing DNS resolution..."
-echo "VIKUNJA_URL=$VIKUNJA_URL"
-echo ""
-echo "Testing curl to Vikunja API..."
-curl -v -s "$VIKUNJA_URL/projects" 2>&1 | head -20 || echo "CURL FAILED"
-echo ""
-echo "Testing internal service discovery..."
-if host vikunja.railway.internal 2>&1 >/dev/null; then
-    echo "✓ DNS: vikunja.railway.internal resolves"
-    curl -v -s http://vikunja.railway.internal/api/v1 2>&1 | head -20
-else
-    echo "✗ DNS: vikunja.railway.internal does not resolve"
-fi
-echo ""
-echo "Environment:"
-env | grep -E "VIKUNJA|PORT|RAILWAY" | sort
-' > /usr/local/bin/debug-network.sh && chmod +x /usr/local/bin/debug-network.sh
+RUN printf '#!/bin/sh\n\
+echo "=== Railway Network Debug ==="\n\
+echo "Testing DNS resolution..."\n\
+echo "VIKUNJA_URL=$VIKUNJA_URL"\n\
+echo ""\n\
+echo "Testing curl to Vikunja API..."\n\
+curl -v -s "$VIKUNJA_URL/projects" 2>&1 | head -20 || echo "CURL FAILED"\n\
+echo ""\n\
+echo "Testing internal service discovery..."\n\
+if host vikunja.railway.internal 2>&1 >/dev/null; then\n\
+    echo "✓ DNS: vikunja.railway.internal resolves"\n\
+    curl -v -s http://vikunja.railway.internal/api/v1 2>&1 | head -20\n\
+else\n\
+    echo "✗ DNS: vikunja.railway.internal does not resolve"\n\
+fi\n\
+echo ""\n\
+echo "Environment:"\n\
+env | grep -E "VIKUNJA|PORT|RAILWAY" | sort\n' > /usr/local/bin/debug-network.sh && chmod +x /usr/local/bin/debug-network.sh
 
 # Expose the proxy port (Railway will set PORT env var)
 EXPOSE 8080
