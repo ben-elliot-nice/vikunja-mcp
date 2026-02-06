@@ -19,4 +19,4 @@ EXPOSE 8080
 
 # Start mcp-proxy wrapping the stdio server
 # Note: Use PORT environment variable for dynamic port assignment (Railway, etc.)
-CMD ["sh", "-c", "args=\"mcp-proxy --pass-environment --port ${PORT:-8080} --host 0.0.0.0 --stateless\"; [ -n \"$MCP_PROXY_API_KEY\" ] && args=\"\\$args --apiKey $MCP_PROXY_API_KEY\"; exec \\$args -- node dist/index.js"]
+CMD ["sh", "-c", "args=\"mcp-proxy --pass-environment --port ${PORT:-8080} --host 0.0.0.0 --stateless\"; if [ -n \"$MCP_PROXY_API_KEY\" ]; then args=\"$args --apiKey $MCP_PROXY_API_KEY\"; fi; exec $args -- node dist/index.js"]
