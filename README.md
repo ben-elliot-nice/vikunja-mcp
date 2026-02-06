@@ -56,6 +56,12 @@ All improvements maintain **100% backward compatibility** with existing implemen
 
 ## Installation
 
+### Quick Deploy to Railway ☁️
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/democratize-technology/vikunja-mcp)
+
+Click the button above to deploy instantly to Railway. For detailed Railway deployment instructions, see [docs/RAILWAY_DEPLOYMENT.md](docs/RAILWAY_DEPLOYMENT.md).
+
 ### Option 1: Install from NPM (Recommended)
 
 The easiest way to use vikunja-mcp is through npx in your Claude Desktop or other MCP-compatible client configuration:

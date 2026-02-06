@@ -14,8 +14,9 @@ COPY . .
 # Build the TypeScript project
 RUN npx tsc
 
-# Expose the proxy port
+# Expose the proxy port (Railway will set PORT env var)
 EXPOSE 8080
 
 # Start mcp-proxy wrapping the stdio server
-CMD ["mcp-proxy", "--port", "8080", "--", "node", "dist/index.js"]
+# Note: Use PORT environment variable for dynamic port assignment (Railway, etc.)
+CMD ["sh", "-c", "args=\"mcp-proxy --pass-environment --port ${PORT:-8080} --host 0.0.0.0 --stateless\"; [ -n \"$MCP_PROXY_API_KEY\" ] && args=\"\\$args --apiKey $MCP_PROXY_API_KEY\"; exec \\$args -- node dist/index.js"]
