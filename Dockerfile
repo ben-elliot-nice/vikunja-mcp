@@ -1,5 +1,8 @@
 FROM node:20-slim
 
+# Install curl for network debugging
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 # Install all dependencies (including dev dependencies for building)
 WORKDIR /app
 COPY package*.json ./
@@ -17,14 +20,12 @@ RUN npx tsc
 # Add debug script for testing connectivity
 RUN printf '#!/bin/sh\n\
 echo "NETWORK_DEBUG: VIKUNJA_URL=$VIKUNJA_URL"\n\
-echo "NETWORK_DEBUG: Testing DNS for vikunja.railway.internal"\n\
-nslookup vikunja.railway.internal 2>&1 || echo "NETWORK_DEBUG: DNS failed"\n\
-echo "NETWORK_DEBUG: Testing DNS for vik.railway.internal"\n\
-nslookup vik.railway.internal 2>&1 || echo "NETWORK_DEBUG: DNS failed"\n\
-echo "NETWORK_DEBUG: Testing HTTP to $VIKUNJA_URL"\n\
-curl -v -s "$VIKUNJA_URL/projects" 2>&1 | head -5 || echo "NETWORK_DEBUG: HTTP failed"\n\
-echo "NETWORK_DEBUG: Environment="\n\
-env | grep -E "VIKUNJA|PORT|RAILWAY" | sort || true\n\
+echo "NETWORK_DEBUG: Testing HTTP to configured URL"\n\
+curl -v -s "$VIKUNJA_URL/projects" 2>&1 | head -10 || echo "NETWORK_DEBUG: HTTP to VIKUNJA_URL failed"\n\
+echo "NETWORK_DEBUG: Testing Railway service: vikunja.railway.internal"\n\
+curl -v -s "http://vikunja.railway.internal/api/v1/projects" 2>&1 | head -10 || echo "NETWORK_DEBUG: HTTP to vikunja.railway.internal failed"\n\
+echo "NETWORK_DEBUG: Testing Railway service: vik.railway.internal"\n\
+curl -v -s "http://vik.railway.internal/api/v1/projects" 2>&1 | head -10 || echo "NETWORK_DEBUG: HTTP to vik.railway.internal failed"\n\
 echo "NETWORK_DEBUG: Complete"\n\
 ' > /usr/local/bin/debug-network.sh && chmod +x /usr/local/bin/debug-network.sh
 
