@@ -15,20 +15,18 @@ COPY . .
 RUN npx tsc
 
 # Add debug script for testing connectivity
-RUN cat > /usr/local/bin/debug-network.sh << 'EOF'
-#!/bin/sh
-echo "NETWORK_DEBUG: VIKUNJA_URL=$VIKUNJA_URL"
-echo "NETWORK_DEBUG: Testing DNS for vikunja.railway.internal"
-nslookup vikunja.railway.internal 2>&1 || echo "NETWORK_DEBUG: DNS lookup failed"
-echo "NETWORK_DEBUG: Testing DNS for vik.railway.internal"
-nslookup vik.railway.internal 2>&1 || echo "NETWORK_DEBUG: DNS lookup failed"
-echo "NETWORK_DEBUG: Testing HTTP to VIKUNJA_URL"
-curl -v -s "$VIKUNJA_URL/projects" 2>&1 | head -5 || echo "NETWORK_DEBUG: HTTP request failed"
-echo "NETWORK_DEBUG: Environment vars"
-env | grep -E "VIKUNJA|PORT|RAILWAY" | sort || echo "NETWORK_DEBUG: No env vars found"
-echo "NETWORK_DEBUG: Complete"
-EOF
-chmod +x /usr/local/bin/debug-network.sh
+RUN printf '#!/bin/sh\n\
+echo "NETWORK_DEBUG: VIKUNJA_URL=$VIKUNJA_URL"\n\
+echo "NETWORK_DEBUG: Testing DNS for vikunja.railway.internal"\n\
+nslookup vikunja.railway.internal 2>&1 || echo "NETWORK_DEBUG: DNS failed"\n\
+echo "NETWORK_DEBUG: Testing DNS for vik.railway.internal"\n\
+nslookup vik.railway.internal 2>&1 || echo "NETWORK_DEBUG: DNS failed"\n\
+echo "NETWORK_DEBUG: Testing HTTP to $VIKUNJA_URL"\n\
+curl -v -s "$VIKUNJA_URL/projects" 2>&1 | head -5 || echo "NETWORK_DEBUG: HTTP failed"\n\
+echo "NETWORK_DEBUG: Environment="\n\
+env | grep -E "VIKUNJA|PORT|RAILWAY" | sort || true\n\
+echo "NETWORK_DEBUG: Complete"\n\
+' > /usr/local/bin/debug-network.sh && chmod +x /usr/local/bin/debug-network.sh
 
 # Expose the proxy port (Railway will set PORT env var)
 EXPOSE 8080
