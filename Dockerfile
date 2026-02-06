@@ -5,8 +5,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --ignore-scripts
 
-# Install mcp-proxy globally
-RUN npm install -g mcp-proxy
+# Install mcp-proxy globally (pinned version for consistency)
+RUN npm install -g mcp-proxy@6.4.0
 
 # Copy MCP server code
 COPY . .
