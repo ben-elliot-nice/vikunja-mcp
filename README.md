@@ -99,6 +99,87 @@ Then configure your MCP client:
 }
 ```
 
+### Option 3: Docker Deployment
+
+For containerized deployments with HTTP access via mcp-proxy:
+
+```bash
+# Build the Docker image
+docker build -t vikunja-mcp .
+
+# Run with environment variables
+docker run -d \
+  -p 8080:8080 \
+  -e VIKUNJA_URL=https://your-vikunja-instance.com/api/v1 \
+  -e VIKUNJA_API_TOKEN=your-api-token \
+  --name vikunja-mcp \
+  vikunja-mcp
+```
+
+Or use Docker Compose for easier configuration:
+
+```bash
+# Create a .env file
+cat > .env << EOF
+VIKUNJA_URL=https://your-vikunja-instance.com/api/v1
+VIKUNJA_API_TOKEN=your-api-token
+
+# Optional: Add API key authentication for mcp-proxy
+MCP_PROXY_API_KEY=your-secure-api-key
+
+# Optional: Configure timeouts
+MCP_PROXY_CONNECTION_TIMEOUT=60000
+MCP_PROXY_REQUEST_TIMEOUT=300000
+EOF
+
+# Start the service
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+```
+
+The Docker setup includes:
+- **mcp-proxy**: Wraps the stdio MCP server with HTTP endpoint on port 8080
+- **Full mcp-proxy configuration**: All timeout, authentication, and endpoint options
+- **Auto-restart**: Container restarts automatically unless stopped manually
+- **Environment-based configuration**: Easy customization via .env file
+
+#### mcp-proxy Configuration Options
+
+Available environment variables for configuring mcp-proxy:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `MCP_PROXY_API_KEY` | API key for request authentication (X-API-Key header) | None |
+| `MCP_PROXY_HOST` | Host to listen on | `::` (all interfaces) |
+| `MCP_PROXY_PORT` | Port to listen on | `8080` |
+| `MCP_PROXY_CONNECTION_TIMEOUT` | Initial connection timeout (ms) | `60000` (60s) |
+| `MCP_PROXY_REQUEST_TIMEOUT` | Request timeout (ms) | `300000` (5min) |
+| `MCP_PROXY_GRACEFUL_SHUTDOWN_TIMEOUT` | Graceful shutdown timeout (ms) | `5000` (5s) |
+| `MCP_PROXY_SSE_ENDPOINT` | SSE endpoint path | `/sse` |
+| `MCP_PROXY_STREAM_ENDPOINT` | Stream endpoint path | `/mcp` |
+| `MCP_PROXY_SERVER_TYPE` | Server type: `sse` or `stream` | Both enabled |
+| `MCP_PROXY_STATELESS` | Enable stateless mode (no sessions) | `false` |
+| `MCP_PROXY_DEBUG` | Enable debug logging | `false` |
+
+**Example with API key authentication:**
+```bash
+docker run -d \
+  -p 8080:8080 \
+  -e VIKUNJA_URL=https://your-vikunja-instance.com/api/v1 \
+  -e VIKUNJA_API_TOKEN=your-api-token \
+  -e MCP_PROXY_API_KEY=secure-key-123 \
+  vikunja-mcp
+```
+
+Then include the API key in your requests:
+```bash
+curl -H "X-API-Key: secure-key-123" http://localhost:8080/mcp
+```
+
+Once running, the MCP server will be accessible via HTTP at `http://localhost:8080`.
+
 ## Configuration
 
 ### Logging Configuration

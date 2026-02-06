@@ -1,0 +1,47 @@
+services:
+  vikunja-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vikunja-mcp-proxy
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      # =============================================================================
+      # VIKUNJA CONFIGURATION (passed to MCP server via --pass-environment)
+      # =============================================================================
+      - VIKUNJA_URL=${VIKUNJA_URL:-https://try.vikunja.io}
+      - VIKUNJA_API_TOKEN=${VIKUNJA_API_TOKEN}
+
+      # =============================================================================
+      # VIKUNJA MCP SERVER CONFIGURATION
+      # =============================================================================
+      # Enable debug logging (default: false)
+      - DEBUG=${DEBUG:-false}
+
+      # Set specific log level (error, warn, info, debug)
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+
+      # Rate limiting configuration
+      - RATE_LIMIT_ENABLED=${RATE_LIMIT_ENABLED:-true}
+      - RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE:-60}
+      - RATE_LIMIT_PER_HOUR=${RATE_LIMIT_PER_HOUR:-1000}
+
+      # Circuit breaker configuration
+      - CIRCUIT_BREAKER_ENABLED=${CIRCUIT_BREAKER_ENABLED:-true}
+      - CIRCUIT_BREAKER_TIMEOUT=${CIRCUIT_BREAKER_TIMEOUT:-60000}
+      - CIRCUIT_BREAKER_ERRORS_THROTTLE=${CIRCUIT_BREAKER_ERRORS_THROTTLE:-10}
+      - CIRCUIT_BREAKER_RESET_TIMEOUT=${CIRCUIT_BREAKER_RESET_TIMEOUT:-30000}
+
+      # =============================================================================
+      # MCP PROXY CONFIGURATION (via command line args)
+      # =============================================================================
+      # These are configured in the command below, not as environment variables
+    command: >
+      mcp-proxy
+      --pass-environment
+      --port ${MCP_PROXY_PORT:-8080}
+      --host ${MCP_PROXY_HOST:-0.0.0.0}
+      --stateless
+      --
+      node dist/index.js
